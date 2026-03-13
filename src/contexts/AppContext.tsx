@@ -1,29 +1,48 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import type { EnvironmentId } from "@/types/domain";
+import type { AppContextDef } from "@/types/domain";
+import { CONTEXTS } from "@/mock/data";
+import { mockApi } from "@/mock/api-service";
+import { useAuth } from "./AuthContext";
 
 interface AppContextValue {
-  environmentId: EnvironmentId;
+  contextId: string;
+  currentContext: AppContextDef;
+  allContexts: AppContextDef[];
+  setContextId: (id: string) => void;
   serviceName: string;
-  resourceGroup: string;
-  setEnvironment: (id: EnvironmentId) => void;
-  setService: (name: string, rg: string) => void;
 }
 
 const AppCtx = createContext<AppContextValue | null>(null);
 
-export function AppContextProvider({ children }: { children: React.ReactNode }) {
-  const [environmentId, setEnvironmentId] = useState<EnvironmentId>("DEV");
-  const [serviceName, setServiceName] = useState("apim-contoso-dev");
-  const [resourceGroup, setResourceGroup] = useState("rg-apim-dev");
+// Map context to a service name for operation key building
+function serviceNameForContext(ctx: AppContextDef): string {
+  const envMap: Record<string, string> = {
+    DEV: "apim-contoso-dev",
+    QA: "apim-contoso-qa",
+    PRE: "apim-contoso-pre",
+    PRD: "apim-contoso-prd",
+  };
+  return envMap[ctx.environmentId] || "apim-contoso-dev";
+}
 
-  const setEnvironment = useCallback((id: EnvironmentId) => setEnvironmentId(id), []);
-  const setService = useCallback((name: string, rg: string) => {
-    setServiceName(name);
-    setResourceGroup(rg);
-  }, []);
+export function AppContextProvider({ children }: { children: React.ReactNode }) {
+  const [contextId, setContextIdState] = useState(CONTEXTS[0].id);
+  const { username } = useAuth();
+
+  const allContexts = mockApi.getContexts();
+  const currentContext = allContexts.find(c => c.id === contextId) || allContexts[0];
+  const serviceName = serviceNameForContext(currentContext);
+
+  const setContextId = useCallback((id: string) => {
+    setContextIdState(id);
+    const ctx = CONTEXTS.find(c => c.id === id);
+    if (ctx && username) {
+      mockApi.logContextChange(username, ctx.displayName);
+    }
+  }, [username]);
 
   return (
-    <AppCtx.Provider value={{ environmentId, serviceName, resourceGroup, setEnvironment, setService }}>
+    <AppCtx.Provider value={{ contextId, currentContext, allContexts, setContextId, serviceName }}>
       {children}
     </AppCtx.Provider>
   );
