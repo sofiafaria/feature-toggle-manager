@@ -9,8 +9,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import LoginPage from "@/pages/LoginPage";
 import BlockedOperationsPage from "@/pages/BlockedOperationsPage";
 import ApisPage from "@/pages/ApisPage";
-import ApiDetailPage from "@/pages/ApiDetailPage";
-import BulkActionsPage from "@/pages/BulkActionsPage";
+import AuditPage from "@/pages/AuditPage";
 import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/NotFound";
 
@@ -42,8 +41,7 @@ const App = () => (
                 <Route index element={<Navigate to="/blocked" replace />} />
                 <Route path="blocked" element={<BlockedOperationsPage />} />
                 <Route path="apis" element={<ApisPage />} />
-                <Route path="apis/:apiName" element={<ApiDetailPage />} />
-                <Route path="bulk" element={<BulkActionsPage />} />
+                <Route path="audit" element={<AuditPage />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />

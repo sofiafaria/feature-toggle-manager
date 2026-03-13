@@ -1,4 +1,4 @@
-export type EnvironmentId = "DEV" | "QA" | "PRD";
+export type EnvironmentId = "DEV" | "QA" | "PRE" | "PRD";
 
 export interface Environment {
   id: EnvironmentId;
@@ -30,11 +30,11 @@ export interface Operation {
   description?: string;
 }
 
-export type OperationKey = string; // "serviceName:apiName:method:urlTemplate"
+export type OperationKey = string;
 
 export interface AllowlistEntry {
   operationKey: OperationKey;
-  scope?: { gatewayId?: string };
+  contextId: string;
 }
 
 export interface Gateway {
@@ -46,7 +46,14 @@ export interface Gateway {
 
 export type ToggleState = "Blocked" | "Unblocked";
 
-export type PolicyMode = "BACKOFFICE_CHECK" | "APIM_NAMED_VALUE";
+export interface AppContextDef {
+  id: string;
+  displayName: string;
+  environmentId: EnvironmentId;
+  environmentName: string;
+  gatewayType: "SelfHost" | "Cloud";
+  endpointUrl: string;
+}
 
 export interface BlockedOperation {
   operationKey: OperationKey;
@@ -61,10 +68,24 @@ export interface BlockedOperation {
   state: ToggleState;
 }
 
-export interface AppContext {
-  environmentId: EnvironmentId;
-  serviceName: string;
-  resourceGroup: string;
+export type AuditActionType =
+  | "BLOCK"
+  | "UNBLOCK"
+  | "BULK_BLOCK"
+  | "BULK_UNBLOCK"
+  | "SETTINGS_UPDATE"
+  | "CONTEXT_CHANGE";
+
+export type AuditResult = "Success" | "Failure";
+
+export interface AuditRecord {
+  id: string;
+  user: string;
+  timestamp: string; // ISO UTC
+  actionType: AuditActionType;
+  contextDisplayName: string;
+  target: string;
+  result: AuditResult;
 }
 
 export function buildOperationKey(serviceName: string, apiName: string, method: string, urlTemplate: string): OperationKey {

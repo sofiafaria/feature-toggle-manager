@@ -1,6 +1,5 @@
-import { ShieldOff, Layers, Zap, Settings } from "lucide-react";
+import { ShieldOff, Layers, Settings, ClipboardList } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -16,14 +15,13 @@ import {
 const items = [
   { title: "Blocked Operations", url: "/blocked", icon: ShieldOff },
   { title: "APIs", url: "/apis", icon: Layers },
-  { title: "Bulk Actions", url: "/bulk", icon: Zap },
+  { title: "Audit", url: "/audit", icon: ClipboardList },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
 
   return (
     <Sidebar collapsible="icon">

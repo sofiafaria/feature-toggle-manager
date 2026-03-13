@@ -2,14 +2,19 @@ import { useAppContext } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ENVIRONMENTS, SERVICES } from "@/mock/data";
-import { LogOut, Shield, Server } from "lucide-react";
-import type { EnvironmentId } from "@/types/domain";
+import { LogOut, Shield } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useNavigate } from "react-router-dom";
 
 export function Topbar() {
-  const { environmentId, setEnvironment, serviceName, setService } = useAppContext();
+  const { contextId, setContextId, allContexts } = useAppContext();
   const { username, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleContextChange = (id: string) => {
+    setContextId(id);
+    navigate("/blocked", { replace: true });
+  };
 
   return (
     <header className="h-14 border-b bg-card flex items-center justify-between px-4 gap-4">
@@ -20,30 +25,13 @@ export function Topbar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <Server className="h-4 w-4 text-muted-foreground" />
-          <Select value={environmentId} onValueChange={(v) => setEnvironment(v as EnvironmentId)}>
-            <SelectTrigger className="w-[130px] h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ENVIRONMENTS.map(e => (
-                <SelectItem key={e.id} value={e.id}>{e.displayName}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Select value={serviceName} onValueChange={(v) => {
-          const svc = SERVICES.find(s => s.name === v);
-          if (svc) setService(svc.name, svc.resourceGroup);
-        }}>
-          <SelectTrigger className="w-[180px] h-8 text-xs">
-            <SelectValue />
+        <Select value={contextId} onValueChange={handleContextChange}>
+          <SelectTrigger className="w-[220px] h-8 text-xs">
+            <SelectValue placeholder="Select Context" />
           </SelectTrigger>
           <SelectContent>
-            {SERVICES.map(s => (
-              <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+            {allContexts.map(c => (
+              <SelectItem key={c.id} value={c.id}>{c.displayName}</SelectItem>
             ))}
           </SelectContent>
         </Select>

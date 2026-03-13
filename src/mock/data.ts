@@ -1,16 +1,12 @@
-import type { Environment, ApimService, Api, Operation, AllowlistEntry, Gateway } from "@/types/domain";
+import type { AppContextDef, Api, Operation, AllowlistEntry } from "@/types/domain";
 import { buildOperationKey } from "@/types/domain";
 
-export const ENVIRONMENTS: Environment[] = [
-  { id: "DEV", displayName: "Development" },
-  { id: "QA", displayName: "Quality Assurance" },
-  { id: "PRD", displayName: "Production" },
-];
-
-export const SERVICES: ApimService[] = [
-  { id: "svc-1", name: "apim-contoso-dev", resourceGroup: "rg-apim-dev", region: "West Europe" },
-  { id: "svc-2", name: "apim-contoso-qa", resourceGroup: "rg-apim-qa", region: "West Europe" },
-  { id: "svc-3", name: "apim-contoso-prd", resourceGroup: "rg-apim-prd", region: "West Europe" },
+export const CONTEXTS: AppContextDef[] = [
+  { id: "dev-selfhost", displayName: "Development - SelfHost", environmentId: "DEV", environmentName: "Development", gatewayType: "SelfHost", endpointUrl: "https://dev-selfhost.contoso.com/api" },
+  { id: "dev-cloud", displayName: "Development - Cloud", environmentId: "DEV", environmentName: "Development", gatewayType: "Cloud", endpointUrl: "https://dev-cloud.contoso.com/api" },
+  { id: "qa-cloud", displayName: "Quality - Cloud", environmentId: "QA", environmentName: "Quality", gatewayType: "Cloud", endpointUrl: "https://qa-cloud.contoso.com/api" },
+  { id: "pre-cloud", displayName: "PreProduction - Cloud", environmentId: "PRE", environmentName: "PreProduction", gatewayType: "Cloud", endpointUrl: "https://pre-cloud.contoso.com/api" },
+  { id: "prd-cloud", displayName: "Production - Cloud", environmentId: "PRD", environmentName: "Production", gatewayType: "Cloud", endpointUrl: "https://prd-cloud.contoso.com/api" },
 ];
 
 export const APIS: Api[] = [
@@ -88,23 +84,17 @@ export function getOperationsForApi(apiName: string): Operation[] {
   }));
 }
 
-// Default: most operations are blocked (not in allowlist). Seed a few as unblocked.
+const defaultContext = "dev-selfhost";
 const defaultService = "apim-contoso-dev";
 export const INITIAL_ALLOWLIST: AllowlistEntry[] = [
-  { operationKey: buildOperationKey(defaultService, "users-api", "GET", "/") },
-  { operationKey: buildOperationKey(defaultService, "users-api", "GET", "/{id}") },
-  { operationKey: buildOperationKey(defaultService, "orders-api", "GET", "/") },
-  { operationKey: buildOperationKey(defaultService, "products-api", "GET", "/") },
-  { operationKey: buildOperationKey(defaultService, "products-api", "GET", "/{id}") },
-  { operationKey: buildOperationKey(defaultService, "products-api", "GET", "/search") },
-  { operationKey: buildOperationKey(defaultService, "auth-api", "POST", "/login") },
-  { operationKey: buildOperationKey(defaultService, "auth-api", "POST", "/register") },
-];
-
-export const GATEWAYS: Gateway[] = [
-  { id: "gw-managed", name: "managed-gateway", location: "West Europe", type: "managed" },
-  { id: "gw-onprem", name: "onprem-gateway-01", location: "On-Premises DC1", type: "selfHosted" },
-  { id: "gw-edge", name: "edge-gateway-us", location: "East US", type: "selfHosted" },
+  { operationKey: buildOperationKey(defaultService, "users-api", "GET", "/"), contextId: defaultContext },
+  { operationKey: buildOperationKey(defaultService, "users-api", "GET", "/{id}"), contextId: defaultContext },
+  { operationKey: buildOperationKey(defaultService, "orders-api", "GET", "/"), contextId: defaultContext },
+  { operationKey: buildOperationKey(defaultService, "products-api", "GET", "/"), contextId: defaultContext },
+  { operationKey: buildOperationKey(defaultService, "products-api", "GET", "/{id}"), contextId: defaultContext },
+  { operationKey: buildOperationKey(defaultService, "products-api", "GET", "/search"), contextId: defaultContext },
+  { operationKey: buildOperationKey(defaultService, "auth-api", "POST", "/login"), contextId: defaultContext },
+  { operationKey: buildOperationKey(defaultService, "auth-api", "POST", "/register"), contextId: defaultContext },
 ];
 
 export const ALL_TAGS = ["core", "commerce", "finance", "reporting", "v1", "v2"];
