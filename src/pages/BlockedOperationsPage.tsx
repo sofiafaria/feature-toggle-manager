@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAppContext } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockApi } from "@/mock/api-service";
+import { api } from "@/services/api";
 import type { BlockedOperation } from "@/types/domain";
 import { formatOperationDisplay } from "@/types/domain";
 import { StatusBadge } from "@/components/StatusBadge";

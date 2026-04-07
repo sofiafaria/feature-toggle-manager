@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { mockApi } from "@/mock/api-service";
+import { api } from "@/services/api";
 import { useAppContext } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Api, Operation, ToggleState } from "@/types/domain";

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { mockApi } from "@/mock/api-service";
+import { api } from "@/services/api";
 import type { AuditRecord } from "@/types/domain";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
