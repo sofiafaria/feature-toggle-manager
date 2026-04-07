@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import type { AppContextDef } from "@/types/domain";
 import { CONTEXTS } from "@/mock/data";
-import { mockApi } from "@/mock/api-service";
+import { api } from "@/services/api";
 import { useAuth } from "./AuthContext";
 
 interface AppContextValue {

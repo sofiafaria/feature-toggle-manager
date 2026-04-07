@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { mockApi } from "@/mock/api-service";
+import { api } from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

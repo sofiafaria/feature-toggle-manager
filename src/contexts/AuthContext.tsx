@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { mockApi } from "@/mock/api-service";
+import { api } from "@/services/api";
 
 interface AuthState {
   isAuthenticated: boolean;
