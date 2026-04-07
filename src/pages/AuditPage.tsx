@@ -28,7 +28,7 @@ export default function AuditPage() {
   const [sortAsc, setSortAsc] = useState(false);
   const [page, setPage] = useState(1);
 
-  const records = mockApi.getAuditLog();
+  const records = api.getAuditLog();
 
   const filtered = useMemo(() => {
     let result = [...records];

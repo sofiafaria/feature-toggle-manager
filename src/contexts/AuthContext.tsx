@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({ isAuthenticated: false, username: null });
 
   const login = useCallback(async (username: string, password: string) => {
-    const result = await mockApi.login(username, password);
+    const result = await api.login(username, password);
     if (result.success) {
       setState({ isAuthenticated: true, username });
     }

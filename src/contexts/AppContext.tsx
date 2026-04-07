@@ -29,7 +29,7 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
   const [contextId, setContextIdState] = useState(CONTEXTS[0].id);
   const { username } = useAuth();
 
-  const allContexts = mockApi.getContexts();
+  const allContexts = api.getContexts();
   const currentContext = allContexts.find(c => c.id === contextId) || allContexts[0];
   const serviceName = serviceNameForContext(currentContext);
 
@@ -37,7 +37,7 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
     setContextIdState(id);
     const ctx = CONTEXTS.find(c => c.id === id);
     if (ctx && username) {
-      mockApi.logContextChange(username, ctx.displayName);
+      api.logContextChange(username, ctx.displayName);
     }
   }, [username]);
 
