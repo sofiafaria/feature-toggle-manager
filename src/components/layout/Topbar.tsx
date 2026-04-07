@@ -1,10 +1,12 @@
 import { useAppContext } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { isRealApi } from "@/services/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { LogOut, Shield } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 export function Topbar() {
   const { contextId, setContextId, allContexts } = useAppContext();
@@ -22,7 +24,9 @@ export function Topbar() {
         <SidebarTrigger className="mr-1" />
         <Shield className="h-5 w-5 text-primary" />
         <span className="font-semibold text-sm tracking-tight hidden sm:inline">APIM Feature Toggle</span>
-      </div>
+        <Badge variant={isRealApi ? "default" : "secondary"} className="text-[10px] px-1.5 py-0 h-4 hidden sm:inline-flex">
+          {isRealApi ? "API" : "Mock"}
+        </Badge>
 
       <div className="flex items-center gap-3">
         <Select value={contextId} onValueChange={handleContextChange}>
