@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { mockApi } from "@/mock/api-service";
+import { api } from "@/services/api";
 import { useAppContext } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Api, Operation, ToggleState } from "@/types/domain";
@@ -36,7 +36,7 @@ export default function ApisPage() {
   const [confirmAction, setConfirmAction] = useState<{ type: "Block" | "Unblock"; items: { serviceName: string; apiName: string; method: string; urlTemplate: string }[] } | null>(null);
 
   useEffect(() => {
-    Promise.all([mockApi.getApis(), mockApi.getTags()]).then(([a, t]) => {
+    Promise.all([api.getApis(), api.getTags()]).then(([a, t]) => {
       setApis(a); setTags(t); setLoading(false);
     });
   }, []);
@@ -76,11 +76,11 @@ export default function ApisPage() {
     setExpandedApi(apiName);
     setOpsLoading(true);
     setSelectedOps(new Set());
-    const ops = await mockApi.getOperations(apiName);
+    const ops = await api.getOperations(apiName);
     const rows: OpRow[] = ops.map(op => ({
       ...op,
       apiName,
-      state: mockApi.getToggleState(serviceName, apiName, op.method, op.urlTemplate, contextId),
+      state: api.getToggleState(serviceName, apiName, op.method, op.urlTemplate, contextId),
     }));
     setOperations(rows);
     setOpsLoading(false);
@@ -113,7 +113,7 @@ export default function ApisPage() {
     // Selected APIs (gather all ops)
     for (const apiName of selectedApis) {
       if (expandedApi === apiName && selectedOps.size > 0) continue; // already handled via ops
-      const ops = await mockApi.getOperations(apiName);
+      const ops = await api.getOperations(apiName);
       for (const op of ops) {
         items.push({ serviceName, apiName, method: op.method, urlTemplate: op.urlTemplate });
       }
@@ -133,17 +133,17 @@ export default function ApisPage() {
     setActing(true);
     const { type, items } = confirmAction;
     setConfirmAction(null);
-    if (type === "Unblock") await mockApi.unblock(items, contextId, username!, currentContext.displayName);
-    else await mockApi.block(items, contextId, username!, currentContext.displayName);
+    if (type === "Unblock") await api.unblock(items, contextId, username!, currentContext.displayName);
+    else await api.block(items, contextId, username!, currentContext.displayName);
     toast.success(`${type === "Block" ? "Blocked" : "Unblocked"} ${items.length} operation(s)`);
 
     // Reload expanded API operations
     if (expandedApi) {
-      const ops = await mockApi.getOperations(expandedApi);
+      const ops = await api.getOperations(expandedApi);
       setOperations(ops.map(op => ({
         ...op,
         apiName: expandedApi,
-        state: mockApi.getToggleState(serviceName, expandedApi, op.method, op.urlTemplate, contextId),
+        state: api.getToggleState(serviceName, expandedApi, op.method, op.urlTemplate, contextId),
       })));
     }
     setSelectedOps(new Set());

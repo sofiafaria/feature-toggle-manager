@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAppContext } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockApi } from "@/mock/api-service";
+import { api } from "@/services/api";
 import type { BlockedOperation } from "@/types/domain";
 import { formatOperationDisplay } from "@/types/domain";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -27,7 +27,7 @@ export default function BlockedOperationsPage() {
 
   const load = async () => {
     setLoading(true);
-    const data = await mockApi.getBlockedOperations(serviceName, contextId);
+    const data = await api.getBlockedOperations(serviceName, contextId);
     setOperations(data);
     setLoading(false);
   };
@@ -42,7 +42,7 @@ export default function BlockedOperationsPage() {
     if (!confirmOp) return;
     setActing(confirmOp.operationKey);
     setConfirmOp(null);
-    await mockApi.unblock(
+    await api.unblock(
       [{ serviceName: confirmOp.serviceName, apiName: confirmOp.apiName, method: confirmOp.method, urlTemplate: confirmOp.urlTemplate }],
       contextId, username!, currentContext.displayName
     );

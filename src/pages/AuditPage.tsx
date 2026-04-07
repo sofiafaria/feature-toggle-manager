@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { mockApi } from "@/mock/api-service";
+import { api } from "@/services/api";
 import type { AuditRecord } from "@/types/domain";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ export default function AuditPage() {
   const [sortAsc, setSortAsc] = useState(false);
   const [page, setPage] = useState(1);
 
-  const records = mockApi.getAuditLog();
+  const records = api.getAuditLog();
 
   const filtered = useMemo(() => {
     let result = [...records];

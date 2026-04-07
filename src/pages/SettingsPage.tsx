@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { mockApi } from "@/mock/api-service";
+import { api } from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,10 @@ import { Settings, Globe, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
 export default function SettingsPage() {
   const { username } = useAuth();
-  const contexts = mockApi.getContexts();
+  const contexts = api.getContexts();
   const [endpoints, setEndpoints] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {};
-    contexts.forEach(c => { map[c.id] = mockApi.getContextEndpoint(c.id); });
+    contexts.forEach(c => { map[c.id] = api.getContextEndpoint(c.id); });
     return map;
   });
   const [testing, setTesting] = useState<string | null>(null);
@@ -27,7 +27,7 @@ export default function SettingsPage() {
     const url = endpoints[contextId] || "";
     if (!isValidUrl(url)) { toast.error("Invalid URL format"); return; }
     const ctx = contexts.find(c => c.id === contextId);
-    mockApi.updateContextEndpoint(contextId, url, username!, ctx?.displayName || contextId);
+    api.updateContextEndpoint(contextId, url, username!, ctx?.displayName || contextId);
     toast.success(`Endpoint saved for ${ctx?.displayName}`);
   };
 
@@ -36,7 +36,7 @@ export default function SettingsPage() {
     if (!isValidUrl(url)) { toast.error("Invalid URL format"); return; }
     setTesting(contextId);
     setTestResults(prev => ({ ...prev, [contextId]: null }));
-    const result = await mockApi.testConnection(url);
+    const result = await api.testConnection(url);
     setTestResults(prev => ({ ...prev, [contextId]: result.success }));
     setTesting(null);
     if (result.success) toast.success("Connection successful");
