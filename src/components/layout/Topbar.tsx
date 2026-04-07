@@ -27,6 +27,7 @@ export function Topbar() {
         <Badge variant={isRealApi ? "default" : "secondary"} className="text-[10px] px-1.5 py-0 h-4 hidden sm:inline-flex">
           {isRealApi ? "API" : "Mock"}
         </Badge>
+      </div>
 
       <div className="flex items-center gap-3">
         <Select value={contextId} onValueChange={handleContextChange}>
