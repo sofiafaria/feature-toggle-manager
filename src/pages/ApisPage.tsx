@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "@/services/api";
+import { api, apiRedis } from "@/services/api";
 import { useAppContext } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Api, Operation, ToggleState } from "@/types/domain";
@@ -77,11 +77,11 @@ export default function ApisPage() {
     setOpsLoading(true);
     setSelectedOps(new Set());
     const ops = await api.getOperations(apiName);
-    const rows: OpRow[] = ops.map(op => ({
+    const rows: OpRow[] = await Promise.all(ops.map(async (op) => ({
       ...op,
       apiName,
-      state: api.getToggleState(serviceName, apiName, op.method, op.urlTemplate, contextId),
-    }));
+      state: await apiRedis.getToggleStateAsync(serviceName, apiName, op.method, op.urlTemplate, contextId),
+    })));
     setOperations(rows);
     setOpsLoading(false);
   };
@@ -133,18 +133,21 @@ export default function ApisPage() {
     setActing(true);
     const { type, items } = confirmAction;
     setConfirmAction(null);
-    if (type === "Unblock") await api.unblock(items, contextId, username!, currentContext.displayName);
-    else await api.block(items, contextId, username!, currentContext.displayName);
+    if (type === "Unblock") await apiRedis.unblock(items, contextId, username!, currentContext.displayName);
+    else await apiRedis.block(items, contextId, username!, currentContext.displayName);
     toast.success(`${type === "Block" ? "Blocked" : "Unblocked"} ${items.length} operation(s)`);
 
     // Reload expanded API operations
     if (expandedApi) {
       const ops = await api.getOperations(expandedApi);
-      setOperations(ops.map(op => ({
+      console.log(ops)
+      const operationsWithState: OpRow[] = await Promise.all(ops.map(async (op) => ({
         ...op,
         apiName: expandedApi,
-        state: api.getToggleState(serviceName, expandedApi, op.method, op.urlTemplate, contextId),
+        state: await apiRedis.getToggleStateAsync(serviceName, expandedApi, op.method, op.urlTemplate, contextId),
+        //state: api.getToggleState(serviceName, expandedApi, op.method, op.urlTemplate, contextId),
       })));
+      setOperations(operationsWithState);
     }
     setSelectedOps(new Set());
     setSelectedApis(new Set());

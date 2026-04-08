@@ -67,6 +67,11 @@ export const mockApi = {
     return found ? "Unblocked" : "Blocked";
   },
 
+  async getToggleStateAsync(serviceName: string, apiName: string, method: string, urlTemplate: string, contextId: string): Promise<ToggleState> {
+    await delay();
+    return this.getToggleState(serviceName, apiName, method, urlTemplate, contextId);
+  },
+
   // Blocked operations
   async getBlockedOperations(serviceName: string, contextId: string): Promise<BlockedOperation[]> {
     await delay();

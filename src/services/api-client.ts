@@ -7,8 +7,9 @@ import type {
   AuditRecord,
   AllowlistEntry,
 } from "@/types/domain";
+import { mockApi } from "@/mock/api-service";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+const BASE_URL = import.meta.env.VITE_REDIS_API_BASE_URL || "";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -87,14 +88,56 @@ export const apiClient = {
       url: urlTemplate,
       contextId,
     });
-    const result = await request<{ allowed: boolean }>(`/toggles/check?${params}`);
-    return result.allowed ? "Unblocked" : "Blocked";
+    try {
+      // If operation key is found in blocked operations, it's blocked
+      await request(`/toggles/check?${params}`);
+      return "Blocked";
+    } catch (error) {
+      // Only return "Unblocked" for 404 errors
+      if (error instanceof Error && error.message.includes("404")) {
+        return "Unblocked";
+      }
+      // Re-throw other errors
+      throw error;
+    }
   },
 
   // Blocked operations
   async getBlockedOperations(serviceName: string, contextId: string): Promise<BlockedOperation[]> {
     const params = new URLSearchParams({ service: serviceName, contextId });
-    return request(`/toggles/blocked?${params}`);
+    const raw = await request<Record<string, ToggleState>>(`/toggles/blocked?${params}`);
+    // Enrich raw data with API and operation details
+    const apis = await mockApi.getApis();
+    //const apis = await this.getApis();
+    const enriched: BlockedOperation[] = [];
+    
+    for (const [operationKey, state] of Object.entries(raw)) {
+      // Parse operationKey: "serviceName:apiName:method:urlTemplate"
+      const parts = operationKey.split(":");
+      const [service, apiName, method, ...urlParts] = parts;
+      const urlTemplate = urlParts.join(":");
+      
+      const api = apis.find(a => a.name === apiName);
+      if (!api) continue;
+      //const ops = await this.getOperations(apiName);
+      const ops = await mockApi.getOperations(apiName);
+      const op = ops.find(o => o.method === method && o.urlTemplate === urlTemplate);
+      
+      enriched.push({
+        operationKey,
+        serviceName: service,
+        apiName,
+        apiDisplayName: api.displayName,
+        apiPath: api.path,
+        operationName: op?.name || "",
+        operationDisplayName: op?.displayName || "",
+        method,
+        urlTemplate,
+        state,
+      });
+    }
+    
+    return enriched;
   },
 
   // Unblock
