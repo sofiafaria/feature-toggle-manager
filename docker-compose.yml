@@ -1,0 +1,29 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build: ./backend
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      CORS_ORIGIN: http://localhost:8080
+      SESSION_SECRET: dev-secret
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin
+      REDIS_URL: redis://redis:6379
+      APIM_SUBSCRIPTION_ID: ${APIM_SUBSCRIPTION_ID:-}
+      APIM_RESOURCE_GROUP: ${APIM_RESOURCE_GROUP:-}
+      APIM_SERVICE_NAME: ${APIM_SERVICE_NAME:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:3000"

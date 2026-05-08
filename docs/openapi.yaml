@@ -1,0 +1,232 @@
+openapi: 3.0.3
+info:
+  title: Feature Toggle Manager API
+  version: 1.0.0
+  description: Backend contract for the Azure APIM + Redis Feature Toggle Manager.
+servers:
+  - url: http://localhost:3000
+security:
+  - cookieAuth: []
+paths:
+  /auth/login:
+    post:
+      security: []
+      summary: Log in with username/password
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/Login" } } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/LoginResponse" } } } }
+        "401": { $ref: "#/components/responses/Error" }
+  /auth/logout:
+    post:
+      summary: Log out
+      responses: { "204": { description: No Content } }
+  /contexts:
+    get:
+      summary: List all contexts
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Context" } } } }
+  /contexts/{id}/endpoint:
+    get:
+      summary: Get current endpoint URL for a context
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object, properties: { url: { type: string } } } } } }
+    put:
+      summary: Update endpoint URL for a context
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/UpdateEndpoint" } } }
+      responses: { "204": { description: No Content } }
+  /contexts/test-connection:
+    post:
+      summary: Ping a Redis URL to verify connectivity
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [url], properties: { url: { type: string, format: uri } } } } }
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { type: object, properties: { success: { type: boolean }, error: { type: string } } } } }
+  /apis:
+    get:
+      summary: List APIs from APIM
+      parameters: [{ name: search, in: query, schema: { type: string } }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Api" } } } } }
+  /apis/{name}/operations:
+    get:
+      summary: List operations for an API
+      parameters: [{ name: name, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Operation" } } } } }
+  /tags:
+    get:
+      summary: List tags
+      responses: { "200": { description: OK, content: { application/json: { schema: { type: array, items: { type: string } } } } } }
+  /toggles/blocked:
+    get:
+      summary: List blocked operations for a context+service
+      parameters:
+        - { name: service, in: query, required: true, schema: { type: string } }
+        - { name: contextId, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: { type: string, enum: [Blocked, Unblocked] }
+  /toggles/check:
+    get:
+      summary: Check whether an operation is allowed
+      parameters:
+        - { name: service, in: query, required: true, schema: { type: string } }
+        - { name: api, in: query, required: true, schema: { type: string } }
+        - { name: method, in: query, required: true, schema: { type: string } }
+        - { name: url, in: query, required: true, schema: { type: string } }
+        - { name: contextId, in: query, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Blocked, content: { application/json: { schema: { type: object, properties: { allowed: { type: boolean } } } } } }
+        "404": { description: Not blocked }
+  /toggles/block:
+    post:
+      summary: Block one or more operations
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ToggleBatch" } } }
+      responses: { "204": { description: No Content } }
+  /toggles/unblock:
+    post:
+      summary: Unblock one or more operations
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ToggleBatch" } } }
+      responses: { "204": { description: No Content } }
+  /toggles/bulk-by-tag:
+    post:
+      summary: Block or unblock all operations carrying given tags within a service
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/BulkByTag" } } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object, properties: { count: { type: integer } } } } } }
+  /audit:
+    get:
+      summary: List audit records (newest first)
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/AuditRecord" } } } } }
+  /audit/context-change:
+    post:
+      summary: Record a CONTEXT_CHANGE audit entry
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ContextChange" } } }
+      responses: { "204": { description: No Content } }
+components:
+  securitySchemes:
+    cookieAuth: { type: apiKey, in: cookie, name: ftm_session }
+  responses:
+    Error:
+      description: Error
+      content: { application/json: { schema: { $ref: "#/components/schemas/Problem" } } }
+  schemas:
+    Login:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string }
+        password: { type: string }
+    LoginResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        error: { type: string }
+    Context:
+      type: object
+      properties:
+        id: { type: string }
+        displayName: { type: string }
+        environmentId: { type: string, enum: [DEV, QA, PRE, PRD] }
+        environmentName: { type: string }
+        gatewayType: { type: string, enum: [SelfHost, Cloud] }
+        endpointUrl: { type: string }
+    UpdateEndpoint:
+      type: object
+      required: [url, user, contextDisplayName]
+      properties:
+        url: { type: string, format: uri }
+        user: { type: string }
+        contextDisplayName: { type: string }
+    Api:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        displayName: { type: string }
+        path: { type: string }
+        protocols: { type: array, items: { type: string } }
+        tags: { type: array, items: { type: string } }
+    Operation:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        displayName: { type: string }
+        method: { type: string }
+        urlTemplate: { type: string }
+        description: { type: string }
+    ToggleItem:
+      type: object
+      required: [serviceName, apiName, method, urlTemplate]
+      properties:
+        serviceName: { type: string }
+        apiName: { type: string }
+        method: { type: string }
+        urlTemplate: { type: string }
+    ToggleBatch:
+      type: object
+      required: [items, contextId, user, contextDisplayName]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/ToggleItem" } }
+        contextId: { type: string }
+        user: { type: string }
+        contextDisplayName: { type: string }
+    BulkByTag:
+      type: object
+      required: [serviceName, tagNames, action, contextId, user, contextDisplayName]
+      properties:
+        serviceName: { type: string }
+        tagNames: { type: array, items: { type: string } }
+        action: { type: string, enum: [block, unblock] }
+        contextId: { type: string }
+        user: { type: string }
+        contextDisplayName: { type: string }
+    ContextChange:
+      type: object
+      required: [user, contextDisplayName]
+      properties:
+        user: { type: string }
+        contextDisplayName: { type: string }
+    AuditRecord:
+      type: object
+      properties:
+        id: { type: string }
+        user: { type: string }
+        timestamp: { type: string, format: date-time }
+        actionType: { type: string, enum: [BLOCK, UNBLOCK, BULK_BLOCK, BULK_UNBLOCK, SETTINGS_UPDATE, CONTEXT_CHANGE] }
+        contextDisplayName: { type: string }
+        target: { type: string }
+        result: { type: string, enum: [Success, Failure] }
+    Problem:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
